@@ -21,7 +21,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("migrating test db error: %v", err)
 	}
 
-	_, err = db.Exec(`TRUNCAte workouts, workout_entries CASCADE`)
+	_, err = db.Exec(`TRUNCATE workouts, workout_entries CASCADE`)
 	if err != nil {
 		t.Fatalf("truncating tables err: %v", err)
 	}
@@ -33,7 +33,7 @@ func TestCreateWorkout(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
-	store := NewPostgrewWorkoutStore(db)
+	store := NewPostgresWorkoutStore(db)
 
 	tests := []struct {
 		name    string

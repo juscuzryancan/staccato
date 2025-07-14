@@ -28,7 +28,7 @@ type PostgresWorkoutStore struct {
 }
 
 func NewPostgresWorkoutStore(db *sql.DB) *PostgresWorkoutStore {
-	return &PostgresWorkoutStore{db: db}
+	return &PostgresWorkoutStore{db}
 }
 
 type WorkoutStore interface {
