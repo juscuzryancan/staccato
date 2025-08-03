@@ -1,30 +1,27 @@
 package app
 
-// Housing => data
-// How are we gonna handle the data
-// Struct yes or no
-
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/juscuzryancan/staccato/internal/api"
 	"github.com/juscuzryancan/staccato/internal/middleware"
+	"github.com/juscuzryancan/staccato/internal/service"
 	"github.com/juscuzryancan/staccato/internal/store"
+	"github.com/juscuzryancan/staccato/internal/utils"
 	"github.com/juscuzryancan/staccato/migrations"
 )
 
 type Application struct {
-	Logger         *log.Logger
-	WorkoutHandler *api.WorkoutHandler
-	UserHandler    *api.UserHandler
-	TokenHandler   *api.TokenHandler
-	BetHandler     *api.BetHandler
-	Middleware     middleware.UserMiddleware
-	DB             *sql.DB
+	Logger            *log.Logger
+	UserHandler       *api.UserHandler
+	TokenHandler      *api.TokenHandler
+	BetHandler        *api.BetHandler
+	Middleware        middleware.UserMiddleware
+	DB                *sql.DB
+	LiquipediaService *service.LiquipediaService
 }
 
 func NewApplication() (*Application, error) {
@@ -41,31 +38,40 @@ func NewApplication() (*Application, error) {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	// stores here
-	workoutStore := store.NewPostgresWorkoutStore(pgDB)
 	userStore := store.NewPostgresUserStore(pgDB)
 	tokenStore := store.NewPostgresTokenStore(pgDB)
 	betStore := store.NewPostgresBetStore(pgDB)
+	tournamentStore := store.NewPostgresTournamentStore(pgDB)
 
 	// handlers here
-	workoutHandler := api.NewWorkoutHandler(workoutStore, logger)
 	userHandler := api.NewUserHandler(userStore, logger)
 	tokenHandler := api.NewTokenHandler(tokenStore, userStore, logger)
 	betHandler := api.NewBetHandler(betStore, logger)
 	middlewareHandler := middleware.UserMiddleware{UserStore: userStore}
 
+	// services here
+	liquipediaService := service.NewLiquipediaService(tournamentStore, logger)
+
 	app := &Application{
 		logger,
-		workoutHandler,
 		userHandler,
 		tokenHandler,
 		betHandler,
 		middlewareHandler,
 		pgDB,
+		liquipediaService,
 	}
 
 	return app, nil
 }
 
 func (a *Application) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Status is available")
+	data, err := a.LiquipediaService.GetTournament()
+	if err != nil {
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internalservererror"})
+		return
+	}
+	utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"data": data})
+
+	// fmt.Fprint(w, "Status is available")
 }

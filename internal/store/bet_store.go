@@ -4,7 +4,7 @@ import "database/sql"
 
 type Bet struct {
 	ID     int `json:"id"`
-	amount int `json:"amount"`
+	Amount int `json:"amount"`
 	UserID int `json:"user_id"`
 }
 
@@ -32,7 +32,7 @@ func (pg *PostgresBetStore) CreateBet(bet *Bet) (*Bet, error) {
     VALUES ($1)
     RETURNING id;
     `
-	err = tx.QueryRow(query, bet.amount).Scan(&bet.ID)
+	err = tx.QueryRow(query, bet.Amount).Scan(&bet.ID)
 	if err != nil {
 		return nil, err
 	}
